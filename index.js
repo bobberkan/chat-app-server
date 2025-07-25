@@ -9,7 +9,7 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
 	cors: {
-		origin: 'http://localhost:3000', // Frontend URL
+		origin: '*', // Render uchun
 		methods: ['GET', 'POST'],
 	},
 })
@@ -17,12 +17,12 @@ const io = new Server(server, {
 app.use(cors())
 app.use(express.json())
 
-// JSON fayl funksiyalar (read/write)
+// JSON fayl funksiyalar
 const readUsers = async () => {
 	try {
 		const data = await fs.readFile('users.json', 'utf8')
 		return JSON.parse(data)
-	} catch (error) {
+	} catch {
 		return []
 	}
 }
@@ -35,7 +35,7 @@ const readMessages = async () => {
 	try {
 		const data = await fs.readFile('posts.json', 'utf8')
 		return JSON.parse(data)
-	} catch (error) {
+	} catch {
 		return []
 	}
 }
@@ -58,8 +58,7 @@ app.post('/signup', async (req, res) => {
 		return res.status(400).json({ error: 'User already exists' })
 	}
 
-	const saltRounds = 10
-	const hashedPassword = await bcrypt.hash(password, saltRounds)
+	const hashedPassword = await bcrypt.hash(password, 10)
 
 	const newUser = {
 		id: (users.length + 1).toString(),
@@ -68,27 +67,19 @@ app.post('/signup', async (req, res) => {
 	}
 	users.push(newUser)
 	await writeUsers(users)
-	res.json({
-		message: 'Signup successful',
-		user: { id: newUser.id, name: newUser.name },
-	})
+	res.json({ message: 'Signup successful' })
 })
 
 app.post('/login', async (req, res) => {
 	const { name, password } = req.body
-	console.log('Login attempt:', { name, password })
 	const users = await readUsers()
 	const user = users.find(user => user.name === name)
 	if (!user) {
 		return res.status(400).json({ error: 'User not found' })
 	}
 	const match = await bcrypt.compare(password, user.password)
-	console.log('Password match:', match)
 	if (match) {
-		res.json({
-			message: 'Login successful',
-			user: { id: user.id, name: user.name },
-		})
+		res.json({ message: 'Login successful' })
 	} else {
 		res.status(400).json({ error: 'Incorrect password' })
 	}
@@ -122,23 +113,24 @@ app.post('/messages', async (req, res) => {
 	messages.push(newMessage)
 	await writeMessages(messages)
 
-	// Xabarni real-time yuborish
+	// Real-time emit qilish
 	io.emit('newMessage', newMessage)
 
 	res.json(newMessage)
 })
 
+app.get('/ping', (req, res) => res.send('pong')) // Render Sleep oldini olish uchun
+
 // SOCKET.IO CONNECTION
 io.on('connection', socket => {
-	console.log('A user connected:', socket.id)
+	console.log('User connected:', socket.id)
 
 	socket.on('disconnect', () => {
 		console.log('User disconnected:', socket.id)
 	})
 })
 
-// SERVER START
 const PORT = process.env.PORT || 5000
 server.listen(PORT, () => {
-	console.log(`Shadowgram server running on port ${PORT} with Socket.IO`)
+	console.log(`Server running on port ${PORT}`)
 })

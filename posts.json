@@ -1,16 +1,3 @@
 [
-  {
-    "_id": "1753442460061",
-    "sender": "test1",
-    "receiver": "test",
-    "content": "salom\n",
-    "createdAt": "2025-07-25T11:21:00.061Z"
-  },
-  {
-    "_id": "1753442466223",
-    "sender": "test",
-    "receiver": "test1",
-    "content": "hi\n",
-    "createdAt": "2025-07-25T11:21:06.223Z"
-  }
+  
 ]
