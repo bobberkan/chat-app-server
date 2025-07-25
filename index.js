@@ -9,7 +9,7 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
 	cors: {
-		origin: '*', // Render uchun
+		origin: '*',
 		methods: ['GET', 'POST'],
 	},
 })
@@ -17,7 +17,7 @@ const io = new Server(server, {
 app.use(cors())
 app.use(express.json())
 
-// JSON fayl funksiyalar
+// JSON file functions
 const readUsers = async () => {
 	try {
 		const data = await fs.readFile('users.json', 'utf8')
@@ -103,25 +103,25 @@ app.get('/messages', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
 	const messages = await readMessages()
+
 	const newMessage = {
 		_id: Date.now().toString(),
 		sender: req.body.sender,
 		receiver: req.body.receiver,
-		content: req.body.content,
+		content: req.body.content || '',
 		createdAt: new Date(),
 	}
+
 	messages.push(newMessage)
 	await writeMessages(messages)
 
-	// Real-time emit qilish
 	io.emit('newMessage', newMessage)
 
 	res.json(newMessage)
 })
 
-app.get('/ping', (req, res) => res.send('pong')) // Render Sleep oldini olish uchun
+app.get('/ping', (req, res) => res.send('pong'))
 
-// SOCKET.IO CONNECTION
 io.on('connection', socket => {
 	console.log('User connected:', socket.id)
 
